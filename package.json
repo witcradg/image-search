@@ -1,0 +1,26 @@
+{
+  "name": "image-search",
+  "version": "0.0.1",
+  "description": "FCC Microservices project",
+  "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/witcradg/image-search.git"
+  },
+  "author": "witcradg@gmail.com",
+  "dependencies": {
+    "async": "~0.2.8",
+    "express": "^4.14.0",
+    "mongodb": "^2.2.5",
+    "socket.io": "~0.9.14"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "devDependencies": {},
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/witcradg/image-search/issues"
+  },
+  "homepage": "https://github.com/witcradg/image-search#readme"
+}

@@ -1,0 +1,21 @@
+
+body {
+    font-family: "Century Gothic", Arial;
+    padding: 2% 15% 2% 15%;
+}
+
+.barred {
+    border-left: solid thick gray;
+    text-align: left;
+    font-weight: normal;
+    padding: 0 2% 0 2%;
+}
+
+.stories {
+    list-style-type: none;
+    font-weight: normal;
+}
+
+li {
+    margin: 1% 0 1% 0;
+}
