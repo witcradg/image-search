@@ -1,4 +1,8 @@
 'use strict';
+if (process.argv[2] && process.argv[2].toLowerCase() === 'debug') {
+    global.debug = true;
+    console.log("debugging");
+}
 
 var express = require('express'),
     routes = require('./app/routes/index.js'),
@@ -7,7 +11,8 @@ var express = require('express'),
 var app = express();
 var router = express.Router();
 
-//export MONGOLAB_URI="mongodb://<dbuser>:<dbpassword>@ds161175.mlab.com:61175/fcc-dgw"
+//export MONGOLAB_URI="mongodb://xxxx:yyyyy@ds161175.mlab.com:61175/fcc-dgw"
+
 var url = process.env.MONGOLAB_URI;
 
 mongo.connect(url, function (err, db) {
@@ -21,8 +26,6 @@ mongo.connect(url, function (err, db) {
     app.use("/",router);
     routes(router,db);
     
-    
-
     app.listen(process.env.PORT || 3000, process.env.IP || "0.0.0.0", function(){
         console.log("server listening on port " + process.env.PORT + " at IP " + process.env.IP);
     });

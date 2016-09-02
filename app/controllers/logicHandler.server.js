@@ -1,66 +1,79 @@
 'use strict';
 
+var request = require('request');
+
 var log = function (args) {
 	var str = '';
 		for (var i = 0; i < arguments.length; i++) {
 			str += arguments[i] + ' ';    	
-
 	}
-	if (process.env.DEBUG_LOGGING == "true") {
+	if (global.debug) {
 		console.log(str);
 	}
 }
 
 function logicHandler(db) {  
-	var urls = db.collection('urls');
+	var collection = db.collection('imagesearch');
 	
 	this.getImages = function(req, res) {
-		log("getUrl called");
-		var value = req.params.value;
-  		if (value == 'favicon.ico') {
+		log("getImages called");
+		var searchString = req.params.value;
+  		if (searchString == 'favicon.ico') {
   			log('skipping favicon');
   		} else {
-	  		log("value:",value);
-			log("JSON value:",JSON.stringify(value));
-	
-	  		urls.findOne( {'short_url': value }, { '_id': false }, function(err, record) {
-	  			log("findOne result:",JSON.stringify(record));
-				if (err) { throw err; }
-				if (record) {
-					log("record.original_url:", record.original_url);
-					res.redirect(record.original_url);		
-					res.end();//not required when using res.send, not sure about res.redirect				
-				} else {
-					res.send("error: " + value + " This url is not in the database.");
-				}
-			});
-  		}
-	},
-	
-	/**
-	 * remove this if not needed
-	 */
-	this.processSubmittedUrl = function(req, res, next) {
-	    log("processSubmittedUrl req.url:", req.url);
-	    next(); 
-	}
-}
+			var pageOffset = req.query.offset || '0'; 
+			var PAGE_SIZE = 10; //not variable in the requirements
+			var page = Number(pageOffset);
+	  		var uriBase = 'https://www.googleapis.com/customsearch/v1?googlehost=google.com&safe=medium&searchType=image';	
+			//log('uriBase:', uriBase);
 
-var createUrl = function(originalUrl, urls, callback) {
-	log('createUrl originalUrl', originalUrl);
-	urls.count({}, function (err, count) {
-		if (err) {
-			throw err;
-		}
-		var shortUrl = (1000 + count + 1).toString();//simplify lookup
-    	log("shortUrl:", shortUrl);
-    	//could be improved with a lookup on the original to return any existing document pointing at the same original
-		//would be safer with a unique index on short_url to prevent simutaneous submissions returning the same count
-		urls.insert( {'original_url': originalUrl, 'short_url': shortUrl }, function(err) {
-			if (err) { log('error detected in insert'); }
-			callback(err, shortUrl);
+			var apikey = "AIzaSyCKizpBjh6D5VFlSZR_9rizUjM79INTytA";
+			//log('apikey:', apikey);
+			
+			var credentials = '011155214332352662074:83scjoh6jle';
+			//log('credentials:', credentials);
+
+			//&fields=kind,items(title,characteristics/length)
+			var fields = "items(title,link,snippet,image/contextLink)";
+
+			var uri = `${uriBase}&key=${apikey}&fields=${fields}&cx=${credentials}&start=${PAGE_SIZE*page+1}&q=${searchString}`;
+			console.log("uri:", uri);
+
+			//request seems to take a string not an encoded uri
+			request(uri, function (err, response, body) {
+				if (err) { throw err; }
+				
+				if (response.statusCode == 200) {
+					//TODO if count > 9 drop oldest before insert. Implies need to carry timestamp in document
+					collection.find({}).sort({'dtm': 1}).toArray(function(err, items) {
+						if (err) { throw err;}
+						log("history count:",items.length);
+						if (items.length > 9) { //arbitrary value for max number of "latest searches" history
+							log('found collection count > 5. Deleting oldest record: ', JSON.stringify(items[0]));	
+							var id = items[0]._id;
+							collection.remove( { '_id': items[0]._id });
+						}
+					});
+
+				}
+				collection.insert( {'search': searchString, 'dtm': Date.now() }, function(err) {
+						if (err) { log('error detected in insert'); throw err;}
+				});
+				var formatted = `<pre>${body}</pre>`;
+				res.send(formatted);
+
+			})
+ 		}
+	},
+	this.getSearches = function(req, res) {		
+		log("getSearches called");
+		collection.find().toArray(function(err, items) {
+			if (err) throw err;
+            console.log(items);
+            var formatted = `<pre>${JSON.stringify(items,null,' ')}</pre>`;
+            res.send(formatted);
 		});
-	});
+	}
 }
 
 
