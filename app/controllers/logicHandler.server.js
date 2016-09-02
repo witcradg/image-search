@@ -37,7 +37,7 @@ function logicHandler(db) {
 			var fields = "items(title,link,snippet,image/contextLink)";
 
 			var uri = `${uriBase}&key=${apikey}&fields=${fields}&cx=${credentials}&start=${PAGE_SIZE*page+1}&q=${searchString}`;
-			console.log("uri:", uri);
+			log("uri:", uri);
 
 			//request seems to take a string not an encoded uri
 			request(uri, function (err, response, body) {
@@ -69,7 +69,7 @@ function logicHandler(db) {
 		log("getSearches called");
 		collection.find().toArray(function(err, items) {
 			if (err) throw err;
-            console.log(items);
+            log(items);
             var formatted = `<pre>${JSON.stringify(items,null,' ')}</pre>`;
             res.send(formatted);
 		});
